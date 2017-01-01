@@ -14,6 +14,11 @@ Currently used platforms are:
 
 Full documentation for each class and util is available in sources (accessible as JavaDOC by item name in any IDE supports JavaDOC).
 
+## How to use
+You can download or close this repository and use included IntelliJ IDEA project file "jm.iml" to add module with sources to your project or you can create project in your favorite IDE and just add all source files included.
+ 
+*NOTE*: You can place Kotlin files in any directory you want but you **must** place Java files in paths acording package name, so place all Java helpers library contains in right places.  
+
 ## Contents
 
   * Classes and utils sets:
