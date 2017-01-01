@@ -53,7 +53,7 @@ You can download or close this repository and use included IntelliJ IDEA project
 
 ### Math
 Set of classes and extensions to simplify math routines and conversions for different number types. 
-```
+```kotlin
 //Simple max\min syntax
 val v = 0.max(event.y).min(height)
 
@@ -70,7 +70,7 @@ val dif = -3.diff(-2.1) //gets 0.9
 - ``PLog`` - class for output log data in indented format with nearly **zero** overhead.
 
 **Sample code**
-```
+```kotlin
  class PLogTestClass {
    val log = Plog() //PLog object
 
@@ -142,13 +142,13 @@ for( n in count )  //Will itterate in [0..count-1]
 - ``Any?.equalsByRef( other:Any? )`` - Compare objects always BY REFERENCE, even if ``equals`` is overloaded.
 
 * Holder example: free object data
-```
+```kotlin
 val oH  = Holder( CreateBigDataObject() )
 CallCodeUsingObjectData( oH.h )
 oH.close() //will set object ref to null
 ```
 * Holder example: Auto closeable
-```
+```kotlin
 Holder( FileOutputStream(FileName) ).use{
   //code using stream dta
 } //will close stream and set it ref to null
