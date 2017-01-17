@@ -2,6 +2,15 @@ package jm.lib
 
 import java.io.Closeable
 import java.io.Flushable
+import kotlin.reflect.KProperty
+
+/* Changes
+ [11.01.2017]
+   + firstset<T> - delegate
+*/
+
+// ---------------------------------------------------------------------------------------
+private object UNINITIALIZED_VALUE
 
 // ---------------------------------------------------------------------------------------
 /**Universal safe converter to String.
@@ -80,14 +89,20 @@ fun Any?.asDouble() : Double {
 }
 
 // ---------------------------------------------------------------------------------------
-/**Call block and supress any exceptions thrown, call optional exception notifier on exception*/
-inline fun safeCall(cb : () -> Unit, onExcept : ((ex : Exception) -> Unit)? = null ) {
+/**Call **block** and suppress any exceptions thrown, call **onExcept** block on exception.
+ *
+ * Returns value from **block** or **onExcept**.*/
+inline fun <T> safeCall(block : () -> T, onExcept : (ex : Exception) -> T) : T {
   try {
-    cb.invoke()
+    return block.invoke()
   } catch(ex : Exception) {
-    onExcept?.invoke(ex)
+    return onExcept.invoke(ex)
   }
 }
+
+/**Call **block** and suppress any exceptions thrown. Returns **block** result or **null** */
+inline fun <T> safeCall(block : () -> T) : T? = safeCall(block, { null })
+
 // ---------------------------------------------------------------------------------------
 /**Class to hold value and allow to close it
  * ```
@@ -107,7 +122,7 @@ class Holder<T>(@JvmField var handle : T? = null) : Closeable, AutoCloseable {
 
   fun set(v : T?, doclose : Boolean = true) {
     if (handle == v) return
-    if (doclose && handle != null ) {
+    if (doclose && handle != null) {
       (handle as? Flushable)?.flush()
       (handle as? Closeable)?.close() ?: (handle as? AutoCloseable)?.close()
     }
@@ -129,7 +144,39 @@ class Holder<T>(@JvmField var handle : T? = null) : Closeable, AutoCloseable {
 }
 
 // ---------------------------------------------------------------------------------------
-/**Compare objects always BY REFERENCE, even if [equals] is overloaded.*/
-fun Any?.equalsByRef( other:Any? ) = jHelper.CmpByRef(this,other)
+/**Delegation class for set field by first assignment
+ *
+ * Usage:
+ *```
+ * class A {
+ *   var field by singleset<Int>
+ *
+ *   fun ClassInit() {
+ *     //Here field value is undefined
+ *
+ *     field = 10 // first assignment
+ *
+ *     //Here field value is set to 10
+ *   }
+ * }
+ *```
+ **/
+class firstset<T> {
+  private var _value : Any? = UNINITIALIZED_VALUE
+  private var _initialized = false
 
+  operator fun getValue(thisRef : Any?, property : KProperty<*>) : T {
+    if (!_initialized) throw Exception("Value has not been assigned yet!")
+    @Suppress("UNCHECKED_CAST")
+    return _value as T
+  }
+
+  operator fun setValue(thisRef : Any?, property : KProperty<*>, value : T) {
+    if (_initialized) throw Exception("Value has already been assigned!")
+    _value = value
+    _initialized = true
+  }
+
+  fun isInitialized() = _initialized
+}
 // ---------------------------------------------------------------------------------------

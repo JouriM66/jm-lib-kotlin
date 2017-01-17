@@ -1,5 +1,15 @@
 package jm.lib
 
+/*Changes
+ 14.01.2017
+   + TextProgress.abort() marked as return Throwable to allow use it as "throw abort()" to tell compiler all below code is not called
+
+ 09.01.2017
+   * TextProgress - changed default progress to ConsoleProgress
+   + ConsoleProgress - added static [instance] field
+   + QuietProgress - added static [instance] field
+*/
+
 // -------------------------------------------------------------------------
 /** User progress, warning and error information.
  *  Descendants must override at least [outs] and [note]
@@ -9,17 +19,13 @@ open class TextProgress {
   @JvmField var noError = false
   @JvmField var noWarning = false
   @JvmField var quiet = false
+  @JvmField var unbuffered = false
 
   companion object {
     @JvmStatic private var FInstance : TextProgress? = null
 
-    @JvmStatic protected fun setInstance(v : TextProgress) : TextProgress {
-      FInstance = v;
-      return FInstance!!
-    }
-
     @JvmStatic fun instance(v : TextProgress? = null) : TextProgress {
-      if (FInstance == null) FInstance = v ?: TextProgress()
+      if (FInstance == null) FInstance = v ?: ConsoleProgress.instance
       return FInstance!!
     }
   }
@@ -66,11 +72,12 @@ open class TextProgress {
   }
 
   /**Write error to stderr WITH \r\n and terminate program*/
-  open fun abort(f : String = "", vararg args : Any?, ex : Exception? = null) {
+  open fun abort(f : String = "", vararg args : Any?, ex : Exception? = null) : Throwable {
     noError = false
-    if ( f == "" ) note("Programm aborted.\n") else err(f, *args)
+    if (f == "") note("Programm aborted.\n") else err(f, *args)
     ex?.printStackTrace()
     System.exit(0)
+    throw Exception("")
   }
 }
 
@@ -81,18 +88,22 @@ open class TextProgress {
  */
 class ConsoleProgress : TextProgress() {
   companion object {
-    @JvmStatic fun preRegister() : TextProgress = instance(newInstance())
-    @JvmStatic fun newInstance() : TextProgress = ConsoleProgress()
+    val instance by lazy { newInstance() }
+
+    @JvmStatic fun preRegister() = TextProgress.instance(instance)
+    @JvmStatic fun newInstance() = ConsoleProgress()
   }
 
   override fun outs(f : String) : TextProgress {
-    System.out.print(f); return this
+    System.out.print(f)
+    if (unbuffered) System.out.flush()
+    return this
   }
 
   override fun note(f : String, vararg args : Any?) : TextProgress {
     if (!quiet) {
       System.err.printf(f, *args)
-      System.err.flush()
+      if (unbuffered) System.err.flush()
     }
     return this
   }
@@ -104,7 +115,9 @@ class ConsoleProgress : TextProgress() {
  */
 class QuietProgress : TextProgress() {
   companion object {
-    @JvmStatic fun preRegister() : TextProgress = instance(newInstance())
-    @JvmStatic fun newInstance() : TextProgress = QuietProgress()
+    val instance by lazy { newInstance() }
+
+    @JvmStatic fun preRegister() = instance(newInstance())
+    @JvmStatic fun newInstance() = QuietProgress()
   }
 }

@@ -9,14 +9,14 @@ import java.io.Closeable
  *
  * **Constructors**
  *
- * ``Plog(enabled : Boolean = true)``
+ * ``PLog(enabled : Boolean = true)``
  *
  * Create PLog object with enabled or disabled logging.
  * If logging is set *false* log output will be disabled.
  * If logging is disabled almost NO overhead added to code speed.
  *
  * **Methods**
- * - [PROC]``(nm : String, params : String = "", cb : Plog.() -> R)`` - start function body
+ * - [PROC]``(nm : String, params : String = "", cb : PLog.() -> R)`` - start function body
  * - [log]``(t : String)`` - log message to current [TextProgress]
  * - [log]``( cb:()->String )`` - log message to current [TextProgress] using lazy inited string.
  * This method must be used for maximum performance.
@@ -24,7 +24,7 @@ import java.io.Closeable
  * **Sample code**
  *```
  * class PLogTestClass {
- *   val log = Plog() //PLog object
+ *   val log = PLog() //PLog object
  *
  *   //Method returns Int
  *   fun Call() = log.PROC("Call") {
@@ -60,14 +60,19 @@ import java.io.Closeable
  * ```
  * @see TextProgress
  */
-open class Plog(private val enabled : Boolean = true) : Closeable {
+
+/* Changes
+ [09.01.2017]
+   - removed [open] from class and protected functions
+   * [enabled] field replaced by [allowlog]
+   * class renamed to [PLog]
+*/
+
+class PLog(private val allowlog : Boolean = true) : Closeable {
   private var indent = 0
-  protected val progress by lazy { GetProgress() }
-  protected val allowlog by lazy { enabled }
+  private val progress by lazy { TextProgress.instance() }
 
-  open protected fun GetProgress() : TextProgress = TextProgress.instance()
-
-  protected fun proc(nm : String, params : String) {
+  private fun proc(nm : String, params : String) {
     log("$nm($params) {")
     indent++
   }
@@ -91,7 +96,7 @@ open class Plog(private val enabled : Boolean = true) : Closeable {
    * Increases indent level, writes method start and end to log.
    *
    * The only limitation in method usage is use of "return" keyword. To return data
-   * from method "return@PROC" form must be used (see [Plog] sample).
+   * from method "return@PROC" form must be used (see [PLog] sample).
    *
    * Will log method call as:
    * ```
@@ -102,7 +107,7 @@ open class Plog(private val enabled : Boolean = true) : Closeable {
    * @param params Text with method parameters description or values.
    * @param cb Original method body.
    */
-  fun <R> PROC(nm : String, params : String = "", cb : Plog.() -> R) : R =
+  fun <R> PROC(nm : String, params : String = "", cb : PLog.() -> R) : R =
     this.use {
       if (allowlog) proc(nm, params)
       this.cb()
@@ -111,7 +116,7 @@ open class Plog(private val enabled : Boolean = true) : Closeable {
 
 // -------------------------------------------------------------------------
 class PLogTestClass {
-  val log = Plog() //PLog object
+  val log = PLog() //PLog object
 
   //Method returns Int
   fun Call() = log.PROC("Call") {

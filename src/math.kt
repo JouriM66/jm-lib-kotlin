@@ -45,10 +45,13 @@ fun Double.diff(v : Int) = Math.abs(this - v.toDouble())
 
 // ---------------------------------------------------------------------------------------
 /**Generate random Int in range ``[0..this-1]``.
- * Base value must be ``>1`` or param exception will be thrown
+ * Base value must be ``>1`` or this value used
+ *
+ * Its possible to use Random().nextInt(this) but this need to create new Random class which is expensive
+ * so we'll use Math.random() which use singleton inside Math class.
  **/
 fun Int.random() : Int {
-  require(this > 1) { "Invalid random base" }
+  if (this <= 1) return this else
   if (this == 2) return 1 else
     return (this * Math.random()).toInt().min(this - 1)
 }

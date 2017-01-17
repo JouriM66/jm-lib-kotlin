@@ -1,5 +1,11 @@
 package jm.lib
 
+/**Changes
+ *
+ * 12.01.2017
+ *   + MutableList.filterInplace(), MutableList.filterInplaceIndexed()
+*/
+
 // -------------------------------------------------------------------------
 /**Add all elements to list*/
 fun <T> MutableList<T>.addAll(vararg v : T) : MutableList<T> {
@@ -14,6 +20,30 @@ fun <T> MutableList<T>.addAllAt(idx : Int, vararg v : T) : MutableList<T> {
   for (i in 0..v.size - 1)
     add(idx + i, v[i])
   return this
+}
+
+/**Filter list content inplace. Remove all elements not match given predicate. */
+fun <T> MutableList<T>.filterInplace(predicate : (it : T) -> Boolean) {
+  var n = 0
+  while (n < size) {
+    if (!predicate(get(n)))
+      removeAt(n)
+    else
+      n++
+
+  }
+}
+
+/**Filter list content inplace. Remove all elements not match given predicate. */
+fun <T> MutableList<T>.filterInplaceIndexed(predicate : (it : T, idx : Int) -> Boolean) {
+  var n = 0
+  while (n < size) {
+    if (!predicate(get(n), n))
+      removeAt(n)
+    else
+      n++
+
+  }
 }
 
 /**Add item to the list in the map.
